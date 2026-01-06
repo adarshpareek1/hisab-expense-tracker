@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import TopBar from "../components/Topbar";
+import TopBar from "../components/TopBar";
 import StatCard from "../components/StatCard";
 import AddExpenseForm from "../components/AddExpenseForm";
 import ExpenseList from "../components/ExpenseList";
