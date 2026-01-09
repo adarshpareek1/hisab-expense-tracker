@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { updateExpense, deleteExpense } from "../services/expenseService";
-import { Pencil, Trash2, Search, X } from 'lucide-react';
+import { Pencil, Trash2, Search } from 'lucide-react';
+import Modal from "../components/Modal"; // Import your new Modal component
 
 const ExpenseList = ({ expenses, onRefresh }) => {
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
 
   const filtered = expenses.filter(
     (e) =>
@@ -29,10 +33,18 @@ const ExpenseList = ({ expenses, onRefresh }) => {
     onRefresh();
   };
 
-  const remove = async (id) => {
-    if (!confirm("Delete this expense?")) return;
-    await deleteExpense(id);
-    onRefresh();
+  const handleDeleteClick = (id) => {
+    setExpenseToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (expenseToDelete) {
+      await deleteExpense(expenseToDelete);
+      onRefresh();
+      setShowDeleteModal(false);
+      setExpenseToDelete(null);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -70,7 +82,6 @@ const ExpenseList = ({ expenses, onRefresh }) => {
             className={`rounded-2xl bg-gray-50 p-4 transition-all hover:bg-gray-100 ${editingId === e._id ? 'border border-[var(--primary)] bg-white ring-2 ring-[var(--primary)]/10' : ''}`}
           >
             {editingId === e._id ? (
-              // EDIT MODE
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -94,24 +105,24 @@ const ExpenseList = ({ expenses, onRefresh }) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-500">Date</label>
-                    <input
-                      type="date"
-                      value={form.date}
-                      onChange={(ev) => setForm({ ...form, date: ev.target.value })}
-                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-[var(--primary)]"
-                    />
-                   </div>
-                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-500">Note</label>
-                    <input
-                      type="text"
-                      value={form.note}
-                      onChange={(ev) => setForm({ ...form, note: ev.target.value })}
-                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-[var(--primary)]"
-                    />
-                   </div>
+                    <div className="space-y-1">
+                     <label className="text-xs font-medium text-gray-500">Date</label>
+                     <input
+                       type="date"
+                       value={form.date}
+                       onChange={(ev) => setForm({ ...form, date: ev.target.value })}
+                       className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-[var(--primary)]"
+                     />
+                    </div>
+                    <div className="space-y-1">
+                     <label className="text-xs font-medium text-gray-500">Note</label>
+                     <input
+                       type="text"
+                       value={form.note}
+                       onChange={(ev) => setForm({ ...form, note: ev.target.value })}
+                       className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-[var(--primary)]"
+                     />
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
@@ -130,7 +141,6 @@ const ExpenseList = ({ expenses, onRefresh }) => {
                 </div>
               </div>
             ) : (
-              // VIEW MODE
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
@@ -158,7 +168,7 @@ const ExpenseList = ({ expenses, onRefresh }) => {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button 
-                    onClick={() => remove(e._id)}
+                    onClick={() => handleDeleteClick(e._id)}
                     className="rounded-lg p-2 text-gray-400 hover:bg-white hover:text-red-500 hover:shadow-sm"
                     title="Delete"
                   >
@@ -170,6 +180,14 @@ const ExpenseList = ({ expenses, onRefresh }) => {
           </div>
         ))}
       </div>
+
+      <Modal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Expense"
+        message="Are you sure you want to delete this expense? This action cannot be undone."
+      />
     </div>
   );
 };
